@@ -3,7 +3,6 @@
 #include <cxxopts.hpp>
 #include <flow/ui/Config.hpp>
 #include <flow/ui/Editor.hpp>
-#include <imgui.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -54,7 +53,7 @@ int main(int argc, char** argv)
 #endif
     flow::ui::Editor app(filename);
 
-    app.LoadFonts = [](ImGuiIO& io, flow::ui::Config& config) {
+    app.LoadFonts = [](flow::ui::Config& config) {
         HelloImGui::FontLoadingParams font_params;
         font_params.useFullGlyphRange                 = true;
         font_params.fontConfig.RasterizerDensity      = 4.f;
@@ -63,58 +62,58 @@ int main(int argc, char** argv)
         config.DefaultFont    = flow::ui::LoadFont("fonts/DroidSans.ttf", 18.f, font_params);
         config.NodeHeaderFont = flow::ui::LoadFont("fonts/DroidSans.ttf", 20.f, font_params);
         config.IconFont       = flow::ui::LoadFont("fonts/fontawesome-webfont.ttf", 18.f, font_params);
-
-        io.FontDefault = config.DefaultFont;
     };
 
-    app.SetupStyle = [](ImGuiStyle& imgui_style, flow::ui::Style& style) {
-        imgui_style.CircleTessellationMaxError = 0.1f;
-        imgui_style.CurveTessellationTol       = 0.1f;
-        imgui_style.WindowBorderSize           = 5.f;
-        imgui_style.FrameBorderSize            = 2.f;
-        imgui_style.TabRounding                = 8.f;
-        imgui_style.TabBarBorderSize           = 0.f;
-        imgui_style.CellPadding                = ImVec2(7.f, 7.f);
+    app.SetupStyle = [](flow::ui::Style& style) {
+        style.CircleTessellationMaxError = 0.1f;
+        style.CurveTessellationTol       = 0.1f;
+        style.WindowBorderSize           = 5.f;
+        style.FrameBorderSize            = 2.f;
+        style.TabRounding                = 8.f;
+        style.TabBarBorderSize           = 0.f;
+        style.CellPadding                = {.Width = 7.f, .Height = 7.f};
 
-        auto& imgui_colours = imgui_style.Colors;
+        auto& imgui_colours = style.Colours.BaseColours;
+        using BaseColours   = flow::ui::Style::BaseColours;
 
-        imgui_colours[ImGuiCol_WindowBg]           = ImColor(21, 21, 21);
-        imgui_colours[ImGuiCol_PopupBg]            = ImColor(15, 15, 15, 175);
-        imgui_colours[ImGuiCol_Border]             = ImColor(15, 15, 15);
-        imgui_colours[ImGuiCol_PopupBg]            = imgui_colours[ImGuiCol_WindowBg];
-        imgui_colours[ImGuiCol_FrameBg]            = ImColor(15, 15, 15);
-        imgui_colours[ImGuiCol_MenuBarBg]          = ImColor(21, 21, 21);
-        imgui_colours[ImGuiCol_TitleBg]            = ImColor(21, 21, 21);
-        imgui_colours[ImGuiCol_TitleBgActive]      = imgui_colours[ImGuiCol_TitleBg];
-        imgui_colours[ImGuiCol_Tab]                = ImColor(21, 21, 21);
-        imgui_colours[ImGuiCol_TabUnfocused]       = ImColor(21, 21, 21);
-        imgui_colours[ImGuiCol_TabHovered]         = ImColor(47, 47, 47);
-        imgui_colours[ImGuiCol_TabActive]          = ImColor(3, 98, 195);
-        imgui_colours[ImGuiCol_TabUnfocusedActive] = imgui_colours[ImGuiCol_TabActive];
-        imgui_colours[ImGuiCol_Button]             = ImColor(32, 32, 32);
-        imgui_colours[ImGuiCol_ButtonHovered]      = ImColor(3, 98, 195);
-        imgui_colours[ImGuiCol_ButtonActive]       = ImColor(13, 39, 77);
-        imgui_colours[ImGuiCol_ScrollbarBg]        = ImColor(21, 21, 21);
-        imgui_colours[ImGuiCol_ScrollbarGrab]      = ImColor(86, 86, 86);
-        imgui_colours[ImGuiCol_TableBorderLight]   = ImColor(21, 21, 21);
-        imgui_colours[ImGuiCol_TableBorderStrong]  = ImColor(21, 21, 21);
-        imgui_colours[ImGuiCol_TableRowBg]         = ImColor(36, 36, 36);
-        imgui_colours[ImGuiCol_TableRowBgAlt]      = ImColor(36, 36, 36);
-        imgui_colours[ImGuiCol_Header]             = ImColor(47, 47, 47);
-        imgui_colours[ImGuiCol_HeaderHovered]      = ImColor(50, 50, 50);
-        imgui_colours[ImGuiCol_CheckMark]          = ImColor(3, 98, 195);
+        imgui_colours[BaseColours::WindowBg]          = flow::ui::Colour(21, 21, 21);
+        imgui_colours[BaseColours::PopupBg]           = flow::ui::Colour(15, 15, 15, 175);
+        imgui_colours[BaseColours::Border]            = flow::ui::Colour(15, 15, 15);
+        imgui_colours[BaseColours::PopupBg]           = imgui_colours[BaseColours::WindowBg];
+        imgui_colours[BaseColours::FrameBg]           = flow::ui::Colour(15, 15, 15);
+        imgui_colours[BaseColours::MenuBarBg]         = flow::ui::Colour(21, 21, 21);
+        imgui_colours[BaseColours::TitleBg]           = flow::ui::Colour(21, 21, 21);
+        imgui_colours[BaseColours::TitleBgActive]     = imgui_colours[BaseColours::TitleBg];
+        imgui_colours[BaseColours::Tab]               = flow::ui::Colour(21, 21, 21);
+        imgui_colours[BaseColours::TabDimmed]         = flow::ui::Colour(21, 21, 21);
+        imgui_colours[BaseColours::TabHovered]        = flow::ui::Colour(47, 47, 47);
+        imgui_colours[BaseColours::TabSelected]       = flow::ui::Colour(3, 98, 195);
+        imgui_colours[BaseColours::TabDimmedSelected] = imgui_colours[BaseColours::TabSelected];
+        imgui_colours[BaseColours::Button]            = flow::ui::Colour(32, 32, 32);
+        imgui_colours[BaseColours::ButtonHovered]     = flow::ui::Colour(3, 98, 195);
+        imgui_colours[BaseColours::ButtonActive]      = flow::ui::Colour(13, 39, 77);
+        imgui_colours[BaseColours::ScrollbarBg]       = flow::ui::Colour(21, 21, 21);
+        imgui_colours[BaseColours::ScrollbarGrab]     = flow::ui::Colour(86, 86, 86);
+        imgui_colours[BaseColours::TableBorderLight]  = flow::ui::Colour(21, 21, 21);
+        imgui_colours[BaseColours::TableBorderStrong] = flow::ui::Colour(21, 21, 21);
+        imgui_colours[BaseColours::TableRowBg]        = flow::ui::Colour(36, 36, 36);
+        imgui_colours[BaseColours::TableRowBgAlt]     = flow::ui::Colour(36, 36, 36);
+        imgui_colours[BaseColours::Header]            = flow::ui::Colour(47, 47, 47);
+        imgui_colours[BaseColours::HeaderHovered]     = flow::ui::Colour(50, 50, 50);
+        imgui_colours[BaseColours::CheckMark]         = flow::ui::Colour(3, 98, 195);
 
-        auto& colours = style.Colours.NodeEdtiorColours;
+        auto& colours      = style.Colours.NodeEdtiorColours;
+        using EditorColour = flow::ui::Style::NodeEditorColours;
 
-        colours[ed::StyleColor_Bg]                  = ImColor(38, 38, 38);
-        colours[ed::StyleColor_Grid]                = ImColor(52, 52, 52);
-        colours[ed::StyleColor_NodeBg]              = ImColor(15, 17, 15, 240);
-        colours[ed::StyleColor_NodeBorder]          = ImColor(0, 0, 0);
-        colours[ed::StyleColor_SelNodeBorder]       = ImColor(255, 255, 255);
-        colours[ed::StyleColor_Flow]                = ImColor(32, 191, 85);
-        colours[ed::StyleColor_FlowMarker]          = ImColor(32, 191, 85);
-        colours[ed::StyleColor_HighlightLinkBorder] = ImColor(0, 188, 235);
-        colours[ed::StyleColor_SelLinkBorder]       = ImColor(0, 188, 235);
+        colours[EditorColour::Bg]                  = flow::ui::Colour(38, 38, 38);
+        colours[EditorColour::Grid]                = flow::ui::Colour(52, 52, 52);
+        colours[EditorColour::NodeBg]              = flow::ui::Colour(15, 17, 15, 240);
+        colours[EditorColour::NodeBorder]          = flow::ui::Colour(0, 0, 0);
+        colours[EditorColour::SelNodeBorder]       = flow::ui::Colour(255, 255, 255);
+        colours[EditorColour::Flow]                = flow::ui::Colour(32, 191, 85);
+        colours[EditorColour::FlowMarker]          = flow::ui::Colour(32, 191, 85);
+        colours[EditorColour::HighlightLinkBorder] = flow::ui::Colour(0, 188, 235);
+        colours[EditorColour::SelLinkBorder]       = flow::ui::Colour(0, 188, 235);
     };
 
     try
@@ -122,13 +121,15 @@ int main(int argc, char** argv)
         using namespace flow::ui;
 
         // TODO(trigaux): Fix up imgui exporting to allow for this extending to work.
-        // app.AddDockspace("PropertySpace", DefaultDockspaces::Main, 0.25f, DockspaceSplitDirection::Left);
-        // app.AddDockspace("MiscSpace", DefaultDockspaces::Main, 0.25f, DockspaceSplitDirection::Down);
+#ifndef FLOW_WINDOWS
+        app.AddDockspace("PropertySpace", DefaultDockspaces::Main, 0.25f, DockspaceSplitDirection::Left);
+        app.AddDockspace("MiscSpace", DefaultDockspaces::Main, 0.25f, DockspaceSplitDirection::Down);
 
-        // auto property_window = std::make_shared<PropertyWindow>(app.GetEnv());
-        // app.OnActiveGraphChanged.Bind(flow::IndexableName{property_window->GetName()},
-        //                               [=](const auto& g) { property_window->SetCurrentGraph(g); });
-        // app.AddWindow(property_window, "PropertySpace");
+        auto property_window = std::make_shared<PropertyWindow>(app.GetEnv());
+        app.OnActiveGraphChanged.Bind(flow::IndexableName{property_window->GetName()},
+                                      [=](const auto& g) { property_window->SetCurrentGraph(g); });
+        app.AddWindow(property_window, "PropertySpace");
+#endif
 
         app.Run();
     }
