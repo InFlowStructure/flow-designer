@@ -74,7 +74,7 @@ int main(int argc, char** argv)
         style.CellPadding                = {.Width = 7.f, .Height = 7.f};
 
         auto& imgui_colours = style.Colours.BaseColours;
-        using BaseColour   = flow::ui::Style::BaseColour;
+        using BaseColour    = flow::ui::Style::BaseColour;
 
         imgui_colours[BaseColour::WindowBg]          = flow::ui::Colour(21, 21, 21);
         imgui_colours[BaseColour::PopupBg]           = flow::ui::Colour(15, 15, 15, 175);
