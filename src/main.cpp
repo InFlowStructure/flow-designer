@@ -51,6 +51,7 @@ int main(int argc, char** argv)
         spdlog::set_level(static_cast<spdlog::level::level_enum>(result["log_level"].as<int>()));
     }
 #endif
+
     flow::ui::Editor app(filename);
 
     app.LoadFonts = [](flow::ui::Config& config) {
@@ -102,8 +103,8 @@ int main(int argc, char** argv)
         imgui_colours[BaseColour::HeaderHovered]     = flow::ui::Colour(50, 50, 50);
         imgui_colours[BaseColour::CheckMark]         = flow::ui::Colour(3, 98, 195);
 
-        auto& colours      = style.Colours.NodeEdtiorColours;
-        using EditorColour = flow::ui::Style::NodeEditorColours;
+        auto& colours      = style.Colours.EditorColours;
+        using EditorColour = flow::ui::Style::EditorColour;
 
         colours[EditorColour::Bg]                  = flow::ui::Colour(38, 38, 38);
         colours[EditorColour::Grid]                = flow::ui::Colour(52, 52, 52);
@@ -120,8 +121,6 @@ int main(int argc, char** argv)
     {
         using namespace flow::ui;
 
-        // TODO(trigaux): Fix up imgui exporting to allow for this extending to work.
-#ifndef FLOW_WINDOWS
         app.AddDockspace("PropertySpace", DefaultDockspaces::Main, 0.25f, DockspaceSplitDirection::Left);
         app.AddDockspace("MiscSpace", DefaultDockspaces::Main, 0.25f, DockspaceSplitDirection::Down);
 
@@ -129,7 +128,6 @@ int main(int argc, char** argv)
         app.OnActiveGraphChanged.Bind(flow::IndexableName{property_window->GetName()},
                                       [=](const auto& g) { property_window->SetCurrentGraph(g); });
         app.AddWindow(property_window, "PropertySpace");
-#endif
 
         app.Run();
     }

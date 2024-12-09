@@ -3,7 +3,8 @@
 
 #include "PropertyWindow.hpp"
 
-#include <flow/ui/utilities/Widgets.hpp>
+#include <flow/ui/widgets/PropertyTree.hpp>
+#include <flow/ui/widgets/Text.hpp>
 #include <flow/ui/windows/GraphWindow.hpp>
 #include <imgui.h>
 #include <imgui_node_editor.h>
@@ -17,6 +18,18 @@ FLOW_UI_NAMESPACE_START
 
 using namespace ax;
 namespace ed = ax::NodeEditor;
+
+constexpr Colour empty_property_text_colour = Colour(175, 175, 175);
+
+struct CentredText : public widgets::Text
+{
+    CentredText(const std::string& text, const Colour& c)
+        : Text(text, {widgets::Text::HorizontalAlignment::Centre, widgets::Text::VerticalAlignment::Centre}, c)
+    {
+    }
+
+    virtual ~CentredText() = default;
+};
 
 PropertyWindow::PropertyWindow(std::shared_ptr<flow::Env> env) : Window(PropertyWindow::Name), _env{env} {}
 
@@ -32,185 +45,62 @@ void PropertyWindow::Draw()
     if (!env) return;
 
     auto graph = _graph.lock();
-    if (!ed::GetCurrentEditor() || !graph)
+    if (!GetEditorContext() || !graph)
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(175, 175, 175, 255));
-        widgets::TextCentered("Nothing to show");
-        ImGui::PopStyleColor();
+        CentredText("Nothing to show", empty_property_text_colour)();
         return;
     }
+
+    ed::SetCurrentEditor(reinterpret_cast<ed::EditorContext*>(GetEditorContext()));
 
     std::array<ed::NodeId, 256> selected_ids;
     auto result = ed::GetSelectedNodes(selected_ids.data(), 256);
 
     if (result == 0)
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(175, 175, 175, 255));
-        widgets::TextCentered("Select one or more nodes");
-        ImGui::PopStyleColor();
+        CentredText("Select one or more nodes", empty_property_text_colour)();
         return;
     }
 
     std::set<ed::NodeId> ids(selected_ids.begin(), std::next(selected_ids.begin(), result));
 
-    std::vector<NodeProperty> nodes;
+    std::vector<flow::SharedNode> nodes;
     nodes.reserve(result);
 
     graph->Visit([&](auto& node) {
         if (!ids.contains(std::hash<flow::UUID>{}(node->ID()))) return;
-        nodes.emplace_back(NodeProperty{std::string{node->GetName()}, node});
+        nodes.emplace_back(node);
     });
 
-    ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(38, 38, 38, 255));
-
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.f);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 0.f);
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 1.f));
     for (auto& node : nodes)
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.f, 10.f));
 
-        std::string name = node.Node->GetName() + "##" + std::to_string(std::hash<flow::UUID>{}(node.Node->ID()));
+        std::string c_name = node->GetName() + "##" + std::to_string(std::hash<flow::UUID>{}(node->ID()));
+        widgets::PropertyTree properties(c_name, 2);
 
-        if (!ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
-                                                 ImGuiTreeNodeFlags_FramePadding))
+        const auto make_port_data_property = [&](const auto& port) -> std::vector<std::shared_ptr<flow::ui::Widget>> {
+            return {
+                std::make_shared<widgets::Text>("Type"),
+                std::make_shared<widgets::Text>(std::string{port->GetDataType()}),
+                std::make_shared<widgets::Text>("Value"),
+                std::make_shared<widgets::Text>(port->GetData() ? port->GetData()->ToString() : "None"),
+            };
+        };
+
+        for (const auto& [key, input] : node->GetInputPorts())
         {
-            ImGui::PopStyleVar();
-            continue;
-        }
-        ImGui::PopStyleVar();
-
-        ImGui::SetCursorPos(ImGui::GetCursorPos() - ImVec2(5.f, 1.f));
-        ImGui::BeginTable("Node", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg,
-                          ImGui::GetItemRectSize() + ImVec2(1.f, 0.f));
-        ImGui::TableNextRow();
-
-        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(10.f, 5.f));
-
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(200, 200, 200, 255));
-        ImGui::TableNextColumn();
-        ImGui::AlignTextToFramePadding();
-        ImGui::TextUnformatted("Name");
-        ImGui::PopStyleColor();
-        ImGui::PopStyleVar();
-
-        ImGui::TableNextColumn();
-        if (ImGui::InputText("##name", &node.Name, ImGuiInputTextFlags_EnterReturnsTrue))
-        {
-            node.Node->SetName(node.Name);
-        }
-        ImGui::EndTable();
-
-        ImGui::PushStyleColor(ImGuiCol_Header, IM_COL32(36, 36, 36, 255));
-        if (!node.Node->GetInputPorts().empty() &&
-            ImGui::TreeNodeEx("Inputs", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
-                                            ImGuiTreeNodeFlags_FramePadding))
-        {
-            for (const auto& [key, input] : node.Node->GetInputPorts())
-            {
-                const std::string input_name = std::string{std::string_view(key)};
-                if (!ImGui::TreeNodeEx(input_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
-                                                               ImGuiTreeNodeFlags_FramePadding))
-                {
-                    continue;
-                }
-
-                ImGui::SetCursorPos(ImGui::GetCursorPos() - ImVec2(5.f, 1.f));
-                ImGui::BeginTable("Inputs", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg,
-                                  ImGui::GetItemRectSize() + ImVec2(1.f, 0.f));
-
-                ImGui::TableNextRow();
-
-                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(200, 200, 200, 255));
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Name");
-                ImGui::PopStyleColor();
-
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted(input_name.c_str());
-
-                ImGui::TableNextRow();
-
-                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(200, 200, 200, 255));
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Type");
-                ImGui::PopStyleColor();
-
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted(std::string{input->GetDataType()}.c_str());
-
-                if (auto data = input->GetData(); data && !data->ToString().empty())
-                {
-                    ImGui::TableNextRow();
-
-                    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(200, 200, 200, 255));
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("Value");
-                    ImGui::PopStyleColor();
-
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted(data->ToString().c_str());
-                }
-
-                ImGui::EndTable();
-                ImGui::TreePop();
-            }
-            ImGui::TreePop();
+            const std::string key_name{std::string_view(key)};
+            properties.AddProperty(key_name, make_port_data_property(input), "Inputs");
         }
 
-        if (!node.Node->GetOutputPorts().empty() &&
-            ImGui::TreeNodeEx("Outputs", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
-                                             ImGuiTreeNodeFlags_FramePadding))
+        for (const auto& [key, output] : node->GetOutputPorts())
         {
-            for (const auto& [key, output] : node.Node->GetOutputPorts())
-            {
-                const std::string output_name = std::string{std::string_view(key)};
-
-                if (!ImGui::TreeNodeEx(output_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
-                                                                ImGuiTreeNodeFlags_FramePadding))
-                {
-                    continue;
-                }
-
-                ImGui::SetCursorPos(ImGui::GetCursorPos() - ImVec2(5.f, 1.f));
-                ImGui::BeginTable("Outputs", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg,
-                                  ImGui::GetItemRectSize() + ImVec2(1.f, 0.f));
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Name");
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted(output_name.c_str());
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Type");
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted(std::string{output->GetDataType()}.c_str());
-
-                if (auto data = output->GetData(); data && !data->ToString().empty())
-                {
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("Value");
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted(data->ToString().c_str());
-                }
-
-                ImGui::EndTable();
-                ImGui::TreePop();
-            }
-            ImGui::TreePop();
+            const std::string key_name{std::string_view(key)};
+            properties.AddProperty(key_name, make_port_data_property(output), "Outputs");
         }
 
-        ImGui::PopStyleColor();
-
-        ImGui::TreePop();
+        properties();
     }
-
-    ImGui::PopStyleVar(4);
-    ImGui::PopStyleColor();
 }
 
 FLOW_UI_NAMESPACE_END
