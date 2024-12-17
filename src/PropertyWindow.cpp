@@ -51,7 +51,7 @@ void PropertyWindow::Draw()
         return;
     }
 
-    ed::SetCurrentEditor(reinterpret_cast<ed::EditorContext*>(GetEditorContext()));
+    ed::SetCurrentEditor(std::bit_cast<ed::EditorContext*>(GetEditorContext().get()));
 
     std::array<ed::NodeId, 256> selected_ids;
     auto result = ed::GetSelectedNodes(selected_ids.data(), 256);

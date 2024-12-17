@@ -55,14 +55,9 @@ int main(int argc, char** argv)
     flow::ui::Editor app(filename);
 
     app.LoadFonts = [](flow::ui::Config& config) {
-        HelloImGui::FontLoadingParams font_params;
-        font_params.useFullGlyphRange                 = true;
-        font_params.fontConfig.RasterizerDensity      = 4.f;
-        font_params.reduceMemoryUsageIfFullGlyphRange = true;
-
-        config.DefaultFont    = flow::ui::LoadFont("fonts/DroidSans.ttf", 18.f, font_params);
-        config.NodeHeaderFont = flow::ui::LoadFont("fonts/DroidSans.ttf", 20.f, font_params);
-        config.IconFont       = flow::ui::LoadFont("fonts/fontawesome-webfont.ttf", 18.f, font_params);
+        config.DefaultFont    = flow::ui::LoadFont("fonts/DroidSans.ttf", 18.f);
+        config.NodeHeaderFont = flow::ui::LoadFont("fonts/DroidSans.ttf", 20.f);
+        config.IconFont       = flow::ui::LoadFont("fonts/fontawesome-webfont.ttf", 18.f);
     };
 
     app.SetupStyle = [](flow::ui::Style& style) {
@@ -121,8 +116,8 @@ int main(int argc, char** argv)
     {
         using namespace flow::ui;
 
-        app.AddDockspace("PropertySpace", DefaultDockspaces::Main, 0.25f, DockspaceSplitDirection::Left);
-        app.AddDockspace("MiscSpace", DefaultDockspaces::Main, 0.25f, DockspaceSplitDirection::Down);
+        app.AddDockspace("PropertySpace", DefaultDockspace, 0.25f, DockspaceSplitDirection::Left);
+        app.AddDockspace("MiscSpace", DefaultDockspace, 0.25f, DockspaceSplitDirection::Down);
 
         auto property_window = std::make_shared<PropertyWindow>(app.GetEnv());
         app.OnActiveGraphChanged.Bind(flow::IndexableName{property_window->GetName()},
