@@ -3,4 +3,4 @@
 	url = https://github.com/jarro2783/cxxopts
 [submodule "third_party/flow-ui"]
 	path = third_party/flow-ui
-	url = https://github.com/InFlowStructure/flow-ui.git
+	url = git@github.com:InFlowStructure/flow-ui.git

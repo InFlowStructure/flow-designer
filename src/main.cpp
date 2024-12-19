@@ -61,13 +61,11 @@ int main(int argc, char** argv)
     };
 
     app.SetupStyle = [](flow::ui::Style& style) {
-        style.CircleTessellationMaxError = 0.1f;
-        style.CurveTessellationTol       = 0.1f;
-        style.WindowBorderSize           = 5.f;
-        style.FrameBorderSize            = 2.f;
-        style.TabRounding                = 8.f;
-        style.TabBarBorderSize           = 0.f;
-        style.CellPadding                = {.Width = 7.f, .Height = 7.f};
+        style.WindowBorderSize = 5.f;
+        style.FrameBorderSize  = 2.f;
+        style.TabRounding      = 8.f;
+        style.TabBarBorderSize = 0.f;
+        style.CellPadding      = {.Width = 7.f, .Height = 7.f};
 
         auto& imgui_colours = style.Colours.BaseColours;
         using BaseColour    = flow::ui::Style::BaseColour;
