@@ -114,13 +114,13 @@ int main(int argc, char** argv)
     {
         using namespace flow::ui;
 
-        app.AddDockspace("PropertySpace", DefaultDockspace, 0.25f, DockspaceSplitDirection::Left);
         app.AddDockspace("MiscSpace", DefaultDockspace, 0.25f, DockspaceSplitDirection::Down);
 
         auto property_window = std::make_shared<PropertyWindow>(app.GetEnv());
         app.OnActiveGraphChanged.Bind(flow::IndexableName{property_window->GetName()},
                                       [=](const auto& g) { property_window->SetCurrentGraph(g); });
-        app.AddWindow(property_window, "PropertySpace");
+
+        app.AddWindow(property_window, PropertyDockspace);
 
         app.Run();
     }
